@@ -1,18 +1,23 @@
-import asyncHandler from 'express-async-handler';
-import User from '../models/userModel.js';
-import generateToken from '../utils/generateToken.js';
-import multer from 'multer';
-import path from 'path';
+import asyncHandler from "express-async-handler";
+import User from "../models/userModel.js";
+import generateToken from "../utils/generateToken.js";
+import multer from "multer";
+import path from "path";
 
+// Configure multer storage
 const storage = multer.diskStorage({
   destination(req, file, cb) {
-    cb(null, 'uploads/');
+    cb(null, "uploads/");
   },
   filename(req, file, cb) {
-    cb(null, `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`);
+    cb(
+      null,
+      `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`
+    );
   },
 });
 
+// Check file type function
 function checkFileType(file, cb) {
   const filetypes = /jpeg|jpg|png/;
   const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
@@ -21,10 +26,11 @@ function checkFileType(file, cb) {
   if (extname && mimetype) {
     return cb(null, true);
   } else {
-    cb('Images only!');
+    cb("Images only!");
   }
 }
 
+// Configure multer upload
 const upload = multer({
   storage,
   fileFilter(req, file, cb) {
@@ -32,6 +38,7 @@ const upload = multer({
   },
 });
 
+// User authentication handler
 const authUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
@@ -45,11 +52,12 @@ const authUser = asyncHandler(async (req, res) => {
       token: generateToken(user._id),
     });
   } else {
-    res.status(401);
-    throw new Error('Invalid email or password');
+    res.status(401).json({ message: "Invalid email or password" });
+    throw new Error("Invalid email or password");
   }
 });
 
+// User registration handler
 const registerUser = asyncHandler(async (req, res) => {
   const { username, email, password, city, state, zipcode, role } = req.body;
   const profilePhoto = req.file ? req.file.path : null;
@@ -58,7 +66,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
   if (userExists) {
     res.status(400);
-    throw new Error('User already exists');
+    throw new Error("User already exists");
   }
 
   const user = await User.create({
@@ -83,7 +91,7 @@ const registerUser = asyncHandler(async (req, res) => {
     });
   } else {
     res.status(400);
-    throw new Error('Invalid user data');
+    throw new Error("Invalid user data");
   }
 });
 
